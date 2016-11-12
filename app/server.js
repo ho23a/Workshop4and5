@@ -29,13 +29,17 @@ function getFeedItemSync(feedItemId) {
   // need to check the type and have logic for each type.
   feedItem.contents.author =
   readDocument('users', feedItem.contents.author);
-  31
   // Resolve comment author.
   feedItem.comments.forEach((comment) => {
-    comment.author = readDocument('users', comment.author);
+      comment.author = readDocument('users', comment.author);
+    });
+  // resolve comment likes
+  feedItem.comments.forEach((comment) => {
+    comment.likeCounter.map((id) => readDocument('users', id));
   });
   return feedItem;
 }
+
 /**
 * Emulates a REST call to get the feed data for a particular user.
 * @param user The ID of the user whose feed we are requesting.
@@ -107,7 +111,8 @@ export function postComment(feedItemId, author, contents, cb) {
   feedItem.comments.push({
     "author": author,
     "contents": contents,
-    "postDate": new Date().getTime()
+    "postDate": new Date().getTime(),
+    "likeCounter": []
   });
   writeDocument('feedItems', feedItem);
   // Return a resolved version of the feed item so React can
@@ -131,8 +136,9 @@ export function likeFeedItem(feedItemId, userId, cb) {
   writeDocument('feedItems', feedItem);
   // Return a resolved version of the likeCounter
   emulateServerReturn(feedItem.likeCounter.map((userId) =>
-  readDocument('users', userId)), cb);
+    readDocument('users', userId)), cb);
 }
+
 /**
 * Updates a feed item's likeCounter by removing
 * the user from the likeCounter.
@@ -156,5 +162,26 @@ export function unlikeFeedItem(feedItemId, userId, cb) {
   }
   // Return a resolved version of the likeCounter
   emulateServerReturn(feedItem.likeCounter.map((userId) =>
-  readDocument('users', userId)), cb);
+    readDocument('users', userId)), cb);
+}
+
+export function likeComment(feedItemId, commentIndex, userId, cb) {
+  var feedItem = readDocument('feedItems', feedItemId);
+  var comments = feedItem.comments[commentIndex];
+  comments.likeCounter.push(userId);
+  writeDocument('feedItems', feedItem);
+  emulateServerReturn(comments.likeCounter.map((userId) =>
+    readDocument('users', userId)), cb);
+}
+
+export function unlikeComment(feedItemId, commentIndex, userId, cb) {
+  var feedItem = readDocument('feedItems', feedItemId);
+  var comments = feedItem.comments[commentIndex];
+  var userIndex = comments.likeCounter.indexOf(userId);
+  if (userIndex !== -1) {
+    comments.likeCounter.splice(userIndex, 1);
+    writeDocument('feedItems', feedItem);
+  }
+  emulateServerReturn(comments.likeCounter.map((userId) =>
+    readDocument('users', userId)), cb);
 }

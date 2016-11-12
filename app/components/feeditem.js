@@ -2,9 +2,7 @@ import React from 'react';
 import StatusUpdate from './statusupdate';
 import CommentThread from './commentthread';
 import Comment from './comment';
-import {postComment} from '../server';
-import {unlikeFeedItem} from '../server';
-import {likeFeedItem} from '../server';
+import {postComment, unlikeFeedItem, likeFeedItem} from '../server';
 
 export default class FeedItem extends React.Component {
   constructor(props) {
@@ -53,7 +51,7 @@ export default class FeedItem extends React.Component {
       }
     }
   }
-  
+
   /**
   * Returns 'true' if the user liked the item.
   * Returns 'false' if the user has not liked the item.
@@ -101,7 +99,7 @@ export default class FeedItem extends React.Component {
       );
       break;
       default:
-      throw new Error("Unknown FeedItem: " + data.type);
+        throw new Error("Unknown FeedItem: " + data.type);
     }
     return (
       <div className="fb-status-update panel panel-default">
@@ -146,8 +144,11 @@ export default class FeedItem extends React.Component {
                   // i is comment's index in comments array
                   return (
                     <Comment key={i}
+                      data={data}
+                      likeCounter={comment.likeCounter}
                       author={comment.author}
-                      postDate={comment.postDate}>
+                      postDate={comment.postDate}
+                      reactKey={i}>
                       {comment.contents}
                     </Comment>
                   );
